@@ -12,15 +12,7 @@ const app = express();
 app.use(express.urlencoded({ extended: false}));
 app.use(express.json());
 
-const db = mysql.createConnection(
-    {
-        host: 'localhost',
-        user: 'root',
-        password: '',
-        database: 'org_chart'
-    },
-    console.log("Connected to the org_chart database.")
-)
+
 
 //listen for the server
 app.listen(PORT, () => {

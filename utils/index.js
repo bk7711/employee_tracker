@@ -49,6 +49,9 @@ const askQuestion = () => {
             else if(answer.task == 'Add a department'){
                 addDepartment();
             }
+            else if(answer.task == 'Add a role'){
+                addRoles();
+            }
                     
             })
             
@@ -127,34 +130,64 @@ const addDepartment = () => {
     })
 
 }
-// const addRoles = () => {
-//     return inquirer
-//     .prompt ([
-//         {
-//             type:'input',
-//             name:'addRole',
-//             message: 'What is the name of the role?',
-//             when:(answers) => {
-//                 return answers.task === 'Add a role'
-//             } 
-//         },
-//         {
-//             type:'input',
-//             name:'addRoleSalary',
-//             message: 'What is the salary of the role?',
-//             when:(answers) => {
-//                 return answers.task === 'Add a role'
-//             } 
-//         },
-//         {
-//             type:'input',
-//             name:'addRoleDepartment',
-//             message: 'Which department does the role belong to?',
-//             when:(answers) => {
-//                 return answers.task === 'Add a role'
-//             } 
-//         }
+const addRoles = () => {
+    return inquirer
+    .prompt ([
+        {
+            type:'input',
+            name:'job_title',
+            message: 'What is the name of the role?',
+        },
+        {
+            type:'input',
+            name:'salary',
+            message: 'What is the salary of the role?',
+        },
+        {
+            type:'input',
+            name:'department_name',
+            message: 'Which department does the role belong to?',
+        }
 
+    ]).then((answer) => {
+        
+        let sql =  `SELECT * FROM departments WHERE department_name = ?`
+        let params = answer.department_name
+        db.query(sql, params, (err,res) => {
+            if(err){
+                throw err;
+            }
+            else {
+                let department = res[0].department_id;
+                let sql = `INSERT INTO roles (job_title, salary, department_id)
+                VALUES(?,?,?)`;
+                let params = [answer.job_title, answer.salary, department];
+
+                db.query(sql, params, (err, res) => {
+                    if(err){
+                        throw err;
+                    }else{
+                        console.log("Role added");
+                        sql = `SELECT * FROM roles LEFT JOIN departments ON roles.department_id = departments.department_id`;
+                        db.query(sql, (err,res) => {
+                            if(err){
+                                throw err;
+                            }
+                            console.log('\n');
+                            console.log('COMPANY ROLES');
+                            console.table(res);
+                            askQuestion();
+                        })
+                    }
+                })  
+            }
+        })
+
+
+        
+    })
+
+}
 
 
 
