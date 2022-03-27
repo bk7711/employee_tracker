@@ -52,6 +52,9 @@ const askQuestion = () => {
             else if(answer.task == 'Add a role'){
                 addRoles();
             }
+            else if(answer.task == 'Add an employee'){
+                addEmployee();
+            }
                     
             })
             
@@ -189,6 +192,81 @@ const addRoles = () => {
 
 }
 
+const addEmployee = () => {
+    return inquirer
+    .prompt ([
+        {
+            type:'input',
+            name:'first_name',
+            message: 'What is the employee first name?',
+        },
+        {
+            type:'input',
+            name:'last_name',
+            message: 'What is the employee last name?',
+        },
+        {
+            type:'input',
+            name:'job_title',
+            message: 'What is the employee role?',
+        },
+        {
+            type:'list',
+            name:'manager',
+            message: 'Who is the employee manager',
+            choices:['Josh Gubenheimer', 
+                    'Abraham Lincoln', 
+                    'Brooklyn Sanders'], 
+        }
+
+    ]).then((answer) => {
+        let manager = 0;
+        if(answer.manager === 'Josh Gubenheimer'){
+            manager = 1;
+        }else if(answer.manager === 'Abraham Lincoln'){
+            manager = 2;
+        }else{
+            manager = 3;
+        }
+        
+        let sql =  `SELECT * FROM roles WHERE job_title = ?`
+        let params = answer.job_title
+        db.query(sql, params, (err,res) => {
+            if(err){
+                console.log("Role does not exist. Please add a role first")
+                askQuestion();
+                throw err;
+            }
+            else {
+                // let department = res[0].department_id;
+                // let salary = res[0].salary;
+                let role = res[0].role_id;
+                let sql = `INSERT INTO employees (first_name, last_name, role_id, manager_id)
+                VALUES(?,?,?,?)`;
+                let params = [answer.first_name, answer.last_name, role, manager];
+
+                db.query(sql, params, (err, res) => {
+                    if(err){
+                        throw err;
+                    }else{
+                        console.log("Employee added");
+                        sql = `SELECT * FROM employees LEFT JOIN roles ON employees.role_id = roles.role_id JOIN departments ON roles.department_id = departments.department_id`;
+                        db.query(sql, (err,res) => {
+                            if(err){
+                                throw err;
+                            }
+                            console.log('\n');
+                            console.log('COMPANY EMPLOYEES');
+                            console.table(res);
+                            askQuestion();
+                        })
+                    }
+                })  
+            }
+        })
+    })
+
+}
 
 
 module.exports = askQuestion;
