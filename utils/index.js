@@ -55,10 +55,10 @@ const askQuestion = () => {
             else if(answer.task == 'Add an employee'){
                 addEmployee();
             }
-                    
-            })
-            
-                    
+            else if(answer.task == 'Update an employee role'){
+                updateEmployee();
+            }     
+            })      
         };
 
 askQuestion();
@@ -170,7 +170,9 @@ const addRoles = () => {
                     if(err){
                         throw err;
                     }else{
+                        console.log("----------------------------\n")
                         console.log("Role added");
+                        console.log("----------------------------\n")
                         sql = `SELECT * FROM roles LEFT JOIN departments ON roles.department_id = departments.department_id`;
                         db.query(sql, (err,res) => {
                             if(err){
@@ -249,7 +251,9 @@ const addEmployee = () => {
                     if(err){
                         throw err;
                     }else{
+                        console.log("----------------------------\n")
                         console.log("Employee added");
+                        console.log("----------------------------\n")
                         sql = `SELECT * FROM employees LEFT JOIN roles ON employees.role_id = roles.role_id JOIN departments ON roles.department_id = departments.department_id`;
                         db.query(sql, (err,res) => {
                             if(err){
@@ -265,8 +269,80 @@ const addEmployee = () => {
             }
         })
     })
-
 }
 
+const updateEmployee = () => {
+    const sql = `SELECT * FROM employees`;
+    db.query(sql, (err,res) => {
+        if(err){
+            throw err;
+        }
+        console.table(res);
+    })
+
+    return inquirer
+    .prompt ([
+        {
+            type:'input',
+            name:'last_name',
+            message: 'What is the last name of the employee you would like to update?',
+        },
+        {
+            type:'input',
+            name:'role',
+            message: 'What is the employee new role?',
+        },
+        
+    ]).then((answer) => {
+        let role = answer.role;
+        
+        let id = 0;
+        let sql =  `SELECT * FROM employees WHERE employees.last_name = ?`;
+        let params = answer.last_name
+        db.query(sql, params, (err,res) => {
+            if(err){
+                console.log("Employee does not exist. Please choose a different employee")
+                
+                throw err;
+            }
+            else {
+               id = res[0].employee_id;
+            }
+            
+        let sql = `SELECT * FROM roles WHERE roles.job_title = ?`;
+        let params = role;
+        db.query(sql, params, (err,res) => {
+            if(err){
+                console.log("Job does not exist. Please add the job")
+                throw err;
+            }
+                let roleId = res[0].role_id;
+                let sql = `UPDATE employees SET role_id = ? WHERE employees.employee_id = ?`;
+                let params = [roleId, id]
+
+                db.query(sql, params, (err, res) => {
+                    if(err){
+                        throw err;
+                    }else{
+                        console.log("----------------------------\n")
+                        console.log("Employee updated");
+                        console.log("----------------------------\n")
+                        sql = `SELECT * FROM employees LEFT JOIN roles ON employees.role_id = roles.role_id JOIN departments ON roles.department_id = departments.department_id`;
+                        db.query(sql, (err,res) => {
+                            if(err){
+                                throw err;
+                            }
+                            console.log('\n');
+                            console.log('COMPANY EMPLOYEES');
+                            console.table(res);
+                            askQuestion();
+                        })
+                    }
+                })  
+            })
+        })
+    })
+
+}
 
 module.exports = askQuestion;
