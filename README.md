@@ -12,7 +12,7 @@ This app is available through command line prompts with the use of node.js, inqu
 
 
 https://user-images.githubusercontent.com/69994643/160305991-a0c5d49c-4128-4cbb-9f13-b3474a46f998.mp4
-
+[![Watch the video]](https://drive.google.com/file/d/1IvZybPt6YWH8MmX6r6tbWuFUHGRPPXQV/view)
 
 ## Usage
 This project is ideal for employers to keep track of their employees and company structure.
