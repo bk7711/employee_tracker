@@ -15,7 +15,6 @@ const db = mysql.createConnection(
 )
 
 //create options through inquirer for users to navigate the org_chart
-// let answerChoice = '';
 
 const askQuestion = () => {
 
@@ -34,6 +33,7 @@ const askQuestion = () => {
                     'Add an employee', 
                     'Update an employee role']
                 }    
+                //run functions based on org_chart question and choice
         ]).then((answer) => {
             console.log(answer);
             
@@ -63,7 +63,9 @@ const askQuestion = () => {
 
 askQuestion();
 
+//function for displaying departments if the user chooses this option
 const viewDepartments = () => {
+    //call to the database console.table the results
     const sql = `SELECT * FROM departments`;
     db.query(sql, (err,res) => {
         if(err){
@@ -74,9 +76,11 @@ const viewDepartments = () => {
         console.table(res);
         askQuestion();
     })
-}
+};
 
+//function for displaying roles if the user chooses this option
 const viewRoles = () => {
+    //call to the database console.table the results
     const sql = `SELECT * FROM roles LEFT JOIN departments ON roles.department_id = departments.department_id`;
     db.query(sql, (err,res) => {
         if(err){
@@ -87,8 +91,11 @@ const viewRoles = () => {
         console.table(res);
         askQuestion();
     })
-}
+};
+
+//function for displaying all employees if the user chooses this option
  const viewEmployees = () => {
+     //call to the database console.table the results
      const sql = `SELECT * FROM employees LEFT JOIN roles ON employees.role_id = roles.role_id JOIN departments ON roles.department_id = departments.department_id`;
      db.query(sql, (err,res) => {
         if(err){
@@ -99,8 +106,11 @@ const viewRoles = () => {
         console.table(res);
         askQuestion();
     })
- }
+ };
+
+ //function for adding departments if the user chooses this option
 const addDepartment = () => {
+    //if option is chosen, ask follow up question
     return inquirer
     .prompt ([
         {
@@ -109,8 +119,10 @@ const addDepartment = () => {
                 message: 'What is the name of the department?',
         },
     ]).then((answer) => {
+        //call to the database console.table the results
         let sql = `INSERT INTO departments (department_name)
         VALUES(?)`;
+        //pull the answer to the inquirer question from user and insert into database request
         const params = answer.department_name;
 
         db.query(sql, params, (err, res) => {
@@ -123,6 +135,7 @@ const addDepartment = () => {
                     if(err){
                         throw err;
                     }
+                    //print the new table
                     console.log('\n');
                     console.log('COMPANY DEPARTMENTS');
                     console.table(res);
@@ -131,9 +144,11 @@ const addDepartment = () => {
             }
         })  
     })
+};
 
-}
+//function for adding roles if the user chooses this option
 const addRoles = () => {
+    //follow up questions once this option is chosen
     return inquirer
     .prompt ([
         {
@@ -155,17 +170,21 @@ const addRoles = () => {
     ]).then((answer) => {
         
         let sql =  `SELECT * FROM departments WHERE department_name = ?`
+        //pull department row from the user answers
         let params = answer.department_name
         db.query(sql, params, (err,res) => {
             if(err){
                 throw err;
             }
             else {
+                //get the department id from the row chosen in departments
                 let department = res[0].department_id;
+                
                 let sql = `INSERT INTO roles (job_title, salary, department_id)
                 VALUES(?,?,?)`;
+                //pull from the inquirer answers to set parameters
                 let params = [answer.job_title, answer.salary, department];
-
+                //call to the database console.table the results
                 db.query(sql, params, (err, res) => {
                     if(err){
                         throw err;
@@ -173,6 +192,7 @@ const addRoles = () => {
                         console.log("----------------------------\n")
                         console.log("Role added");
                         console.log("----------------------------\n")
+                        //print new table with added role
                         sql = `SELECT * FROM roles LEFT JOIN departments ON roles.department_id = departments.department_id`;
                         db.query(sql, (err,res) => {
                             if(err){
@@ -187,13 +207,10 @@ const addRoles = () => {
                 })  
             }
         })
-
-
-        
     })
+};
 
-}
-
+//function for adding employees if the user chooses this option
 const addEmployee = () => {
     return inquirer
     .prompt ([
@@ -222,6 +239,7 @@ const addEmployee = () => {
         }
 
     ]).then((answer) => {
+        //set manager_id options to add to new employee row
         let manager = 0;
         if(answer.manager === 'Josh Gubenheimer'){
             manager = 1;
@@ -230,7 +248,7 @@ const addEmployee = () => {
         }else{
             manager = 3;
         }
-        
+        //pull the corresponding job_title from the roles table to gather role_id and department_id
         let sql =  `SELECT * FROM roles WHERE job_title = ?`
         let params = answer.job_title
         db.query(sql, params, (err,res) => {
@@ -246,7 +264,7 @@ const addEmployee = () => {
                 let sql = `INSERT INTO employees (first_name, last_name, role_id, manager_id)
                 VALUES(?,?,?,?)`;
                 let params = [answer.first_name, answer.last_name, role, manager];
-
+                //call to the database console.table the results
                 db.query(sql, params, (err, res) => {
                     if(err){
                         throw err;
@@ -254,6 +272,7 @@ const addEmployee = () => {
                         console.log("----------------------------\n")
                         console.log("Employee added");
                         console.log("----------------------------\n")
+                        //pull and print updated table with new employee
                         sql = `SELECT * FROM employees LEFT JOIN roles ON employees.role_id = roles.role_id JOIN departments ON roles.department_id = departments.department_id`;
                         db.query(sql, (err,res) => {
                             if(err){
@@ -271,6 +290,7 @@ const addEmployee = () => {
     })
 }
 
+//function for updating employees if the user chooses this option
 const updateEmployee = () => {
     const sql = `SELECT * FROM employees`;
     db.query(sql, (err,res) => {
@@ -299,6 +319,7 @@ const updateEmployee = () => {
         let id = 0;
         let sql =  `SELECT * FROM employees WHERE employees.last_name = ?`;
         let params = answer.last_name
+        //find employee by last name to update
         db.query(sql, params, (err,res) => {
             if(err){
                 console.log("Employee does not exist. Please choose a different employee")
@@ -308,7 +329,7 @@ const updateEmployee = () => {
             else {
                id = res[0].employee_id;
             }
-            
+            //pull additional job data from the roles table
         let sql = `SELECT * FROM roles WHERE roles.job_title = ?`;
         let params = role;
         db.query(sql, params, (err,res) => {
@@ -319,7 +340,7 @@ const updateEmployee = () => {
                 let roleId = res[0].role_id;
                 let sql = `UPDATE employees SET role_id = ? WHERE employees.employee_id = ?`;
                 let params = [roleId, id]
-
+            //update employee row with the above parameters
                 db.query(sql, params, (err, res) => {
                     if(err){
                         throw err;
@@ -327,6 +348,7 @@ const updateEmployee = () => {
                         console.log("----------------------------\n")
                         console.log("Employee updated");
                         console.log("----------------------------\n")
+                        //print new and updated table
                         sql = `SELECT * FROM employees LEFT JOIN roles ON employees.role_id = roles.role_id JOIN departments ON roles.department_id = departments.department_id`;
                         db.query(sql, (err,res) => {
                             if(err){
